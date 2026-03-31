@@ -2,8 +2,11 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
-import { Users } from './models/User.js'
-
+import authRoutes from './routes/auth.routes.js'
+import { errorHandler } from './middlewares/errorHandler.js';
+import { notFound } from './middlewares/notFound.js';
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./config/swagger.js";
 
 
 const app = express();
@@ -12,6 +15,7 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'))
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 app.get('/health', (req, res) => {
@@ -21,29 +25,11 @@ app.get('/health', (req, res) => {
     })
 })
 
-app.post("/create", async (req, res) => {
-    try {
-        const user = await Users.create({
-            name: "user",
-            email: "user@gmail.com",
-            password: "user12345",
-            role: "investor",
-            balance: 100000,
-        },{ returnDocument: 'after' })
 
-        res.status(200).json({
-            success:true,
-            message: "user is created successfully!",
-            user
-        })
-    }catch(error) {
-        res.status(500).json({
-            success: false,
-            message: 'Internal server',
-            error: error.message
-        })
-    }
-})
+app.use('/api/auth', authRoutes)
+
+app.use(notFound)
+app.use(errorHandler)
 
 
 export { app }

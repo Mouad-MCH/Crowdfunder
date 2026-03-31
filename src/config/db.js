@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import {ENV} from "../../env.js";
 
-const DATABASE_URL = "mongodb://localhost:27017/Crowdfunder"
+const DATABASE_URL = ENV.DATABASE_URL
 
 export const connectDB = async () => {
     try {

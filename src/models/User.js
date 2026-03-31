@@ -21,12 +21,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "password is rquired"],
         minLength: 8,
-        select: false // for never returned 
+        // select: false // for never returned 
     },
 
     role: {
         type: String,
-        enum: ['owner' | 'investor' | 'admin'],
+        enum: ['owner', 'investor', 'admin'],
         required: true,
     },
 
