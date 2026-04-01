@@ -22,6 +22,12 @@ const projectSchema = new mongoose.Schema({
         required: [true, "capital is required"],
     },
 
+    status: {
+        type: String,
+        enum: ['open', 'closed'],
+        default: 'open'
+    },
+
     ownerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Users',
@@ -45,6 +51,6 @@ const projectSchema = new mongoose.Schema({
 { timestamps: true }
 )
 
-const Projects = mongoose.model('Projects'.projectSchema);
+const Projects = mongoose.model('Projects', projectSchema);
 
 export default Projects

@@ -2,7 +2,8 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
-import authRoutes from './routes/auth.routes.js'
+import authRoutes from './routes/auth.routes.js';
+import projectRoutes from './routes/project.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFound } from './middlewares/notFound.js';
 import swaggerUi from "swagger-ui-express";
@@ -27,6 +28,7 @@ app.get('/health', (req, res) => {
 
 
 app.use('/api/auth', authRoutes)
+app.use('/api/projects', projectRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

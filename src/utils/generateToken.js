@@ -11,3 +11,8 @@ export const generateToken = (payload = {}) => {
         }
     )
 }
+
+
+export const verifyToken = (token) => {
+    return JWT.verify(token, ENV.KEY_SECRET)
+}
