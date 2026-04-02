@@ -1,3 +1,4 @@
+import Investments from "../models/Investment.js";
 import Projects from "../models/Project.js";
 
 
@@ -25,7 +26,14 @@ export const deleteProject_s = async (project) => {
         return { success: false, message: "cannot delete a closed project" }
     }
 
-    const deleted = await Projects.deleteOne(project);
+
+    const investmentCount = await Investments.countDocuments({projectId: project._id});
+
+    if(investmentCount > 0) {
+        return { success: false, message: "Cannot delete a project that already has investments." }
+    }
+
+    await Projects.deleteOne(project);
 
     return {
         success: true,
@@ -52,3 +60,14 @@ export const closeProject_s = async (project) => {
     }
 }
 
+export const getProjectInvestors_s = async (project) => {
+    const investments = await Investments.find({ projectId: project._id })
+    .sort({ createAt: -1 })
+
+    return investments.map((inve) => ({
+        investor: inve.investorId,
+        amount: inve.amount,
+        percentage: ((inve.amount / project.capital) * 100).toFixed(2) + "%",
+        investedAt: inve.createdAt
+    }))
+}

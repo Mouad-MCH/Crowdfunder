@@ -13,3 +13,23 @@ export const loginSchema = z.object({
     email: z.email(),
     password: z.string(),
 })
+
+export const createProjectSchema = z.object({
+    title: z.string('title must be string').min(3).max(50),
+    description: z.string().min(10),
+    capital: z.number().positive().min(1),
+    maxInvestmentPercentage: z.number().positive().min(1).max(50).optional(),
+    initialInvestment: z.number().positive().min(0).optional()
+})
+
+export const updateProjectSchema = z.object({
+    title: z.string('title must be string').min(3).max(50).optional(),
+    description: z.string().min(10).optional(),
+    capital: z.number().positive().min(1).optional(),
+    maxInvestmentPercentage: z.number().positive().min(1).max(50).optional(),
+    initialInvestment: z.number().positive().min(0).optional()
+})
+
+export const investmentSchema = z.object({
+    amount: z.number().positive().min(1)
+})

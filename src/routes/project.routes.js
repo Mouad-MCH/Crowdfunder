@@ -2,6 +2,10 @@ import express from 'express';
 import { projectOwnership } from '../middlewares/onership.middleware.js';
 import { closeProject, createProject, deleteProject, getOwnerProjects, updateProject } from '../controllers/project.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { roleMiddleware } from '../middlewares/role.middleware.js';
+import { validateBody } from '../middlewares/validateRequest.js';
+import { createProjectSchema, investmentSchema, updateProjectSchema } from '../validators/validators.js';
+import { invest } from '../controllers/investment.controller.js';
 
 
 
@@ -44,7 +48,7 @@ router.use(authMiddleware);
  *       500:
  *         description: Internal server error
  */
-router.post('/', createProject)
+router.post('/', roleMiddleware('owner'), validateBody(createProjectSchema), createProject)
 
 /**
  * @swagger
@@ -207,12 +211,161 @@ router.post('/', createProject)
  *         description: No token provided or unauthorized
  *       500:
  *         description: Internal server error
+ * 
+ * /api/projects/{id}/investors:
+ *   get:
+ *     summary: Get investors of a specific project
+ *     tags: [Owner]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Project ID
+ *         schema:
+ *           type: string
+ *           example: 665f1c2a8b7d3e0012345678
+ *     responses:
+ *       200:
+ *         description: Project investors retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   investor:
+ *                     type: string
+ *                     example: 665f1b8a8b7d3e0012345671
+ *                   amount:
+ *                     type: number
+ *                     example: 50000
+ *                   percentage:
+ *                     type: string
+ *                     example: 25.00%
+ *                   investedAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: 2026-04-02T10:30:00.000Z
+ *       401:
+ *         description: No token provided or unauthorized
+ *       403:
+ *         description: Forbidden - only project owner can access this endpoint
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: Internal server error
  */
 router
-   .get('/my-projects', getOwnerProjects)
-   .put('/:id', projectOwnership, updateProject)
-   .patch('/:id', projectOwnership, closeProject)
-   .delete('/:id', projectOwnership, deleteProject)
+   .get('/my-projects', roleMiddleware('owner'), getOwnerProjects)
+   .put('/:id', roleMiddleware('owner'), projectOwnership, validateBody(updateProjectSchema), updateProject)
+   .patch('/:id', roleMiddleware('owner'), projectOwnership, closeProject)
+   .delete('/:id', roleMiddleware('owner'), projectOwnership, deleteProject)
+   .get('/:id/investors', roleMiddleware('owner'), projectOwnership, getOwnerProjects)
+
+// investor
 
 
+
+/**
+ * @swagger
+ * /api/projects/{id}/invest:
+ *   post:
+ *     summary: Invest in a project
+ *     description: Allows an authenticated investor to invest a specific amount in a project (if it is open and within allowed limits).
+ *     tags: [Investor]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Project ID
+ *         schema:
+ *           type: string
+ *           example: 665f1c2a8b7d3e0012345678
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 minimum: 1
+ *                 example: 10000
+ *     responses:
+ *       201:
+ *         description: Investment created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 investment:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 665f2a1a8b7d3e0012345679
+ *                     amount:
+ *                       type: number
+ *                       example: 10000
+ *                     investorId:
+ *                       type: string
+ *                       example: 665f1b8a8b7d3e0012345671
+ *                     projectId:
+ *                       type: string
+ *                       example: 665f1c2a8b7d3e0012345678
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2026-04-02T10:30:00.000Z
+ *                 project:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: 665f1c2a8b7d3e0012345678
+ *                     title:
+ *                       type: string
+ *                       example: Project_test
+ *                     status:
+ *                       type: string
+ *                       enum: [open, closed]
+ *                       example: open
+ *                     fundedPercentage:
+ *                       type: string
+ *                       example: 50.00
+ *                     remainingCapital:
+ *                       type: number
+ *                       example: 100000
+ *                 investorBalance:
+ *                   type: number
+ *                   example: 90000
+ *                 percentage:
+ *                   type: string
+ *                   example: 5.00
+ *       400:
+ *         description: Validation error or business rule violation (e.g. insufficient balance, project closed, exceeding limits)
+ *       401:
+ *         description: No token provided or unauthorized
+ *       403:
+ *         description: Forbidden - only investors can access this endpoint
+ *       404:
+ *         description: Project or investor not found
+ *       500:
+ *         description: Internal server error
+ */
+router
+   .post('/:id/invest', roleMiddleware('investor'), validateBody(investmentSchema), invest)
+ 
 export default router

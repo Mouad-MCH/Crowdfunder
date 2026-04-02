@@ -1,4 +1,4 @@
-import { createProject_s, updateProject_s, deleteProject_s, getOwnerProjects_s, closeProject_s } from "../services/project.service.js";
+import { createProject_s, updateProject_s, deleteProject_s, getOwnerProjects_s, closeProject_s, getProjectInvestors_s } from "../services/project.service.js";
 
 
 export const createProject = async (req, res) => {
@@ -105,6 +105,25 @@ export const closeProject = async (req, res) => {
             message: 'project is deleted',
             project: project.project
         })
+    }catch(error) {
+        res.status(500).json({
+            success: false,
+            message: 'Interval server',
+            error: error.message
+        })
+    }
+}
+
+export const getProjectInvestors = async (req, res) => {
+    try {
+
+        const investors = await getProjectInvestors_s(req.project);
+
+        res.status(200).josn({
+            success: true,
+            investors
+        })
+
     }catch(error) {
         res.status(500).json({
             success: false,
