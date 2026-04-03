@@ -178,7 +178,7 @@ export const getProjectById = async (req, res) => {
 export const getAllProjects = async (req, res) => {
     try {
         const projects = await getAllProjects_s();
-
+        console.log(projects)
         res.status(200).json({
             success: true,
             projects

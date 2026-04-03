@@ -3,8 +3,8 @@ import { depositBalance_s, getAllOwners_s, getUserById_s, getAllInvestors_s } fr
 
 export const depositBalance = async (req, res) => {
   try {
-    const { userId, amount } = req.body;
-    const result = await depositBalance_s(userId, amount);
+    const { amount } = req.body;
+    const result = await depositBalance_s(req.user._id, amount);
 
     
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import { projectOwnership } from '../middlewares/onership.middleware.js';
-import { closeProject, createProject, deleteProject, getOwnerProjects, updateProject, getProjectById, getOpenProjects, getProjectInvestors } from '../controllers/project.controller.js';
+import { closeProject, createProject, deleteProject, getOwnerProjects, updateProject, getProjectById, getOpenProjects, getProjectInvestors, getAllProjects } from '../controllers/project.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { roleMiddleware } from '../middlewares/role.middleware.js';
 import { validateBody } from '../middlewares/validateRequest.js';
@@ -11,6 +11,74 @@ import { invest } from '../controllers/investment.controller.js';
 
 const router = express.Router();
 router.use(authMiddleware);
+
+// admin
+/**
+ * @swagger
+ * /api/projects/all:
+ *   get:
+ *     summary: Get all projects
+ *     description: Retrieve a list of all projects in the system (both open and closed). Accessible only by admin.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All projects retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                     example: 665f1c2a8b7d3e0012345678
+ *                   title:
+ *                     type: string
+ *                     example: Project_test
+ *                   description:
+ *                     type: string
+ *                     example: hello on your test Project
+ *                   capital:
+ *                     type: number
+ *                     example: 200000
+ *                   initialInvestment:
+ *                     type: number
+ *                     example: 150000
+ *                   maxInvestmentPercentage:
+ *                     type: number
+ *                     example: 50
+ *                   status:
+ *                     type: string
+ *                     enum: [open, closed]
+ *                     example: open
+ *                   ownerId:
+ *                     type: string
+ *                     example: 665f1b8a8b7d3e0012345671
+ *                   fundedPercentage:
+ *                     type: string
+ *                     example: 75.00
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: 2026-04-01T10:30:00.000Z
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: 2026-04-02T12:00:00.000Z
+ *       401:
+ *         description: No token provided or unauthorized
+ *       403:
+ *         description: Forbidden - only admin can access this endpoint
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/all', roleMiddleware('admin'), getAllProjects)
+
+
+// owner
 
 /**
  * @swagger
@@ -272,7 +340,7 @@ router
  * /api/projects/{id}/invest:
  *   post:
  *     summary: Invest in a project
- *     description: Allows an authenticated investor to invest a specific amount in a project (if it is open and within allowed limits).
+ *     description: Allows an authenticated investor to invest a specific amount in an open project, subject to balance, remaining capital, and maximum investment percentage rules.
  *     tags: [Investor]
  *     security:
  *       - bearerAuth: []
@@ -327,6 +395,10 @@ router
  *                       type: string
  *                       format: date-time
  *                       example: 2026-04-02T10:30:00.000Z
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2026-04-02T10:30:00.000Z
  *                 project:
  *                   type: object
  *                   properties:
@@ -353,7 +425,7 @@ router
  *                   type: string
  *                   example: 5.00
  *       400:
- *         description: Validation error or business rule violation (e.g. insufficient balance, project closed, exceeding limits)
+ *         description: Validation error or business rule violation such as insufficient balance, project closed, or investment limit exceeded
  *       401:
  *         description: No token provided or unauthorized
  *       403:
@@ -362,7 +434,130 @@ router
  *         description: Project or investor not found
  *       500:
  *         description: Internal server error
+ *
+ * /api/projects:
+ *   get:
+ *     summary: Get open projects
+ *     description: Returns all open projects available for investment. Accessible only to users with the investor role.
+ *     tags: [Investor]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Open projects retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                     example: 665f1c2a8b7d3e0012345678
+ *                   title:
+ *                     type: string
+ *                     example: Project_test
+ *                   description:
+ *                     type: string
+ *                     example: hello on your test Project
+ *                   capital:
+ *                     type: number
+ *                     example: 200000
+ *                   status:
+ *                     type: string
+ *                     enum: [open, closed]
+ *                     example: open
+ *                   ownerId:
+ *                     type: string
+ *                     example: 665f1b8a8b7d3e0012345671
+ *                   maxInvestmentPercentage:
+ *                     type: number
+ *                     example: 50
+ *                   initialInvestment:
+ *                     type: number
+ *                     example: 50000
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: 2026-04-01T10:30:00.000Z
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: 2026-04-02T12:00:00.000Z
+ *       401:
+ *         description: No token provided or unauthorized
+ *       403:
+ *         description: Forbidden - only investors can access this endpoint
+ *       500:
+ *         description: Internal server error
+ *
+ * /api/projects/{id}:
+ *   get:
+ *     summary: Get project by ID
+ *     description: Returns a single project by its ID. Accessible to investor, owner, and admin roles.
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Project ID
+ *         schema:
+ *           type: string
+ *           example: 665f1c2a8b7d3e0012345678
+ *     responses:
+ *       200:
+ *         description: Project retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   example: 665f1c2a8b7d3e0012345678
+ *                 title:
+ *                   type: string
+ *                   example: Project_test
+ *                 description:
+ *                   type: string
+ *                   example: hello on your test Project
+ *                 capital:
+ *                   type: number
+ *                   example: 200000
+ *                 status:
+ *                   type: string
+ *                   enum: [open, closed]
+ *                   example: open
+ *                 ownerId:
+ *                   type: string
+ *                   example: 665f1b8a8b7d3e0012345671
+ *                 maxInvestmentPercentage:
+ *                   type: number
+ *                   example: 50
+ *                 initialInvestment:
+ *                   type: number
+ *                   example: 50000
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: 2026-04-01T10:30:00.000Z
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: 2026-04-02T12:00:00.000Z
+ *       401:
+ *         description: No token provided or unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: Internal server error
  */
+
 router
    .post('/:id/invest', roleMiddleware('investor'), validateBody(investmentSchema), invest)
    .get('/', roleMiddleware('investor'), getOpenProjects)
