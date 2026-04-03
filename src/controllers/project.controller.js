@@ -1,4 +1,4 @@
-import { createProject_s, updateProject_s, deleteProject_s, getOwnerProjects_s, closeProject_s, getProjectInvestors_s } from "../services/project.service.js";
+import { createProject_s, updateProject_s, deleteProject_s, getOwnerProjects_s, closeProject_s, getProjectInvestors_s, getOpenProjects_s, getProjectById_s, getAllProjects_s } from "../services/project.service.js";
 
 
 export const createProject = async (req, res) => {
@@ -119,12 +119,71 @@ export const getProjectInvestors = async (req, res) => {
 
         const investors = await getProjectInvestors_s(req.project);
 
-        res.status(200).josn({
+        res.status(200).json({
             success: true,
             investors
         })
 
     }catch(error) {
+        res.status(500).json({
+            success: false,
+            message: 'Interval server',
+            error: error.message
+        })
+    }
+}
+
+// investor
+
+export const getOpenProjects = async (req, res) => {
+    try {
+
+        const projects = await getOpenProjects_s();
+
+        res.status(200).json({
+            success: true,
+            projects
+        })
+
+    }catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Interval server',
+            error: error.message
+        })
+    }
+}
+
+export const getProjectById = async (req, res) => {
+    try {
+
+        const projects = await getProjectById_s(req.params.id);
+
+        res.status(200).json({
+            success: true,
+            projects
+        })
+
+    }catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Interval server',
+            error: error.message
+        })
+    }
+}
+
+// admin
+
+export const getAllProjects = async (req, res) => {
+    try {
+        const projects = await getAllProjects_s();
+
+        res.status(200).json({
+            success: true,
+            projects
+        })
+    } catch (error) {
         res.status(500).json({
             success: false,
             message: 'Interval server',

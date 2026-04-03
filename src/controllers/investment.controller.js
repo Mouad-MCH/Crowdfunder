@@ -1,4 +1,4 @@
-import { getInvestorInvestments_s, invest_s } from "../services/investment.service.js"
+import { getInvestorInvestments_s, getInvestorPortfolio_s, invest_s } from "../services/investment.service.js"
 
 
 export const invest = async (req, res) => {
@@ -35,6 +35,46 @@ export const getInvestorInvestments = async (req, res) => {
         })
 
     }catch(error) {
+        res.status(500).json({
+            success: false,
+            message: 'Interval server',
+            error: error.message
+        })
+    }
+}
+
+export const getInvestorPortfolio = async (req, res) => {
+    try {
+
+        const profile = await getInvestorPortfolio_s(req.user._id)
+
+        res.status(200).json({
+            success: true,
+            message: 'Investor portfolio retrieved successfully.',
+            profile
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Interval server',
+            error: error.message
+        })
+    }
+}
+
+export const getOwnerPortfolio = async (req, res) => {
+    try {
+
+        const profile = await getOwnerPortfolio_s(req.user._id)
+
+        res.status(200).json({
+            success: true,
+            message: 'Owner portfolio retrieved successfully.',
+            profile
+        })
+
+    }catch (error) {
         res.status(500).json({
             success: false,
             message: 'Interval server',

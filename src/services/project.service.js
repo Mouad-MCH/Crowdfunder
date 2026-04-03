@@ -62,7 +62,7 @@ export const closeProject_s = async (project) => {
 
 export const getProjectInvestors_s = async (project) => {
     const investments = await Investments.find({ projectId: project._id })
-    .sort({ createAt: -1 })
+        .sort({ createAt: -1 })
 
     return investments.map((inve) => ({
         investor: inve.investorId,
@@ -70,4 +70,35 @@ export const getProjectInvestors_s = async (project) => {
         percentage: ((inve.amount / project.capital) * 100).toFixed(2) + "%",
         investedAt: inve.createdAt
     }))
+
 }
+
+// Investor
+
+export const getOpenProjects_s = async () => {
+    const projects = await Projects.find({ status: 'open' })
+        .populate('ownerId', 'name email')
+        .sort({ createAt: -1 });
+
+    return projects;
+}
+
+export const getProjectById_s = async (id) => {
+    const project = await Projects.findById(id).populate('ownerId', 'name email');
+
+    if (!project) {
+        return { success: false, message: 'Project not found.' }
+    }
+
+    return { success: true, project };
+}
+
+// admin
+
+export const getAllProjects_s = async () => {
+    return Projects.find()
+        .populate('ownerId', 'name email')
+        .sort({ createAt: -1 });
+}
+
+

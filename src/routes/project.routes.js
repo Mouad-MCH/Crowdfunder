@@ -1,6 +1,6 @@
 import express from 'express';
 import { projectOwnership } from '../middlewares/onership.middleware.js';
-import { closeProject, createProject, deleteProject, getOwnerProjects, updateProject } from '../controllers/project.controller.js';
+import { closeProject, createProject, deleteProject, getOwnerProjects, updateProject, getProjectById, getOpenProjects, getProjectInvestors } from '../controllers/project.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { roleMiddleware } from '../middlewares/role.middleware.js';
 import { validateBody } from '../middlewares/validateRequest.js';
@@ -263,11 +263,9 @@ router
    .put('/:id', roleMiddleware('owner'), projectOwnership, validateBody(updateProjectSchema), updateProject)
    .patch('/:id', roleMiddleware('owner'), projectOwnership, closeProject)
    .delete('/:id', roleMiddleware('owner'), projectOwnership, deleteProject)
-   .get('/:id/investors', roleMiddleware('owner'), projectOwnership, getOwnerProjects)
+   .get('/:id/investors', roleMiddleware('owner'), projectOwnership, getProjectInvestors)
 
 // investor
-
-
 
 /**
  * @swagger
@@ -367,5 +365,10 @@ router
  */
 router
    .post('/:id/invest', roleMiddleware('investor'), validateBody(investmentSchema), invest)
- 
+   .get('/', roleMiddleware('investor'), getOpenProjects)
+   .get('/:id', roleMiddleware('investor', 'owner', 'admin'), getProjectById)
+
+
+
+
 export default router

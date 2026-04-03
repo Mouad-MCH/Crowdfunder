@@ -33,3 +33,7 @@ export const updateProjectSchema = z.object({
 export const investmentSchema = z.object({
     amount: z.number().positive().min(1)
 })
+
+export const depositBalanceSchema = z.object({
+    amount: z.number().positive().min(1)
+})  

@@ -94,10 +94,62 @@ export const getInvestorInvestments_s = async (investorId) => {
     }))
 }
 
-export const getInvestorPortfolio_s = async () => {
+export const getInvestorPortfolio_s = async (investorId) => {
+    const [investments, investor] = await Promise.all([
+        Investments.find({ investorId })
+            .populate('projectId', 'title capital status'),
+        Users.findById(investorId)
+    ])
 
+    const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
+
+    const portfolio = investments.map((inv) => ({
+        id: inv._id,
+        project: inv.projectId,
+        amount: inv.amount,
+        percentage: inv.projectId
+            ? ((inv.amount / inv.projectId.capital) * 100).toFixed(2) + '%': 'N/A',
+        investedAt: inv.createAt,
+    }))
+
+    return {
+        investorId,
+        investorName: investor.name,
+        investorEmail: investor.email,
+        totalInvested,
+        investmentsCount: investments.length,
+        investorBalance: investor.balance,
+        investments: portfolio
+    };
 }
 
-export const getOwnerPortfolio_s = async () => {
+export const getOwnerPortfolio_s = async (ownerId) => {
+    const projects = await Projects.find({ ownerId }).sort({
+        createAt: -1
+    })
 
+    const portfolio = await Promise.all(
+        projects.map(async (project) => {
+            const investments = await Investments.find({ projectId: project._id })
+
+            const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
+
+            return {
+                projectId: project._id,
+                title: project.title,
+                totalInvested
+            }
+        })
+    )
+
+    const totalProjects = projects.length;
+    const owner = await Users.findById(ownerId);
+
+    return {
+        ownerId,
+        ownerName: owner.name,
+        ownerEmail: owner.email,
+        totalProjects,
+        portfolio
+    }
 }
